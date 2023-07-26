@@ -1,5 +1,11 @@
-use bevy::{prelude::*, window::WindowResized};
-use crate::update::{History, TerminalInput, TerminalOutput};
+use bevy::{window::WindowResized, prelude::{
+    Resource, Handle, Font, ResMut,
+    NodeBundle, Commands, AssetServer, Res,
+    TextStyle, TextSection, Style, Val,
+    FlexDirection, JustifyContent, AlignItems, Overflow,
+    EventReader, TextBundle, Color, Camera2dBundle, BuildChildren
+}};
+use crate::{update::{History, TerminalInput, TerminalOutput, ImageIdenifier}, terminal::Terminal};
 
 #[derive(Default, Resource)]
 pub struct FontResource {
@@ -11,8 +17,8 @@ pub struct NodeResource {
     pub bundle: NodeBundle
 }
 
-pub fn load_font(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font_handle = asset_server.load("Fira_Sans/FiraSans-Bold.ttf");
+pub fn load_font(mut commands: Commands, asset_server: Res<AssetServer>, terminal: Res<Terminal>) {
+    let font_handle = asset_server.load(terminal.font_path());
     commands.insert_resource(FontResource { fira_sans: font_handle });
 }
 
@@ -20,6 +26,8 @@ pub fn setup(mut commands: Commands,
     mut history: ResMut<History>, 
     mut resize_events: EventReader<WindowResized>,
     font_resource: Res<FontResource>,
+    mut image_idenifier: ResMut<ImageIdenifier>,
+    terminal: Res<Terminal>
 ) {
     let font = &font_resource.fira_sans;
     history.vec.push("".to_string());
@@ -45,7 +53,7 @@ pub fn setup(mut commands: Commands,
             let output_node =
             commands.spawn(NodeBundle {
                 style: Style {
-                    height: Val::Px(Val::Percent(100.0).try_sub_with_size(Val::Px(20.0), window_height).unwrap()),
+                    height: Val::Px(Val::Percent(100.0).try_sub_with_size(Val::Px(terminal.font_size()), window_height).unwrap()),
                     width: Val::Percent(100.0),
                     flex_direction: FlexDirection::Column,
                     justify_content: JustifyContent::FlexStart,
@@ -57,6 +65,7 @@ pub fn setup(mut commands: Commands,
                 ..Default::default()
 
             }).id();
+            image_idenifier.output_id = Some(output_node.index());
             //println!("{}", output_node.index());
             commands.entity(output_node).with_children(|parent| {
                 // output
@@ -64,7 +73,7 @@ pub fn setup(mut commands: Commands,
                 .spawn(TextBundle::from_sections([TextSection::from_style(
                     TextStyle {
                         font: font.clone(),
-                        font_size: 20.0,
+                        font_size: terminal.font_size(),
                         color: Color::WHITE,
                     },
                 )]))
@@ -77,17 +86,17 @@ pub fn setup(mut commands: Commands,
                 parent.spawn(TextBundle::from_sections([
                     TextSection::from_style(TextStyle {
                         font: font.clone(),
-                        font_size: 20.0,
+                        font_size: terminal.font_size(),
                         color: Color::GREEN,
                     }),
                     TextSection::from_style(TextStyle {
                         font: font.clone(),
-                        font_size: 20.0,
+                        font_size: terminal.font_size(),
                         color: Color::BLUE,
                     }),
                     TextSection::from_style(TextStyle {
                         font: font.clone(),
-                        font_size: 20.0,
+                        font_size: terminal.font_size(),
                         color: Color::WHITE,
                     }),
                 ]))

@@ -1,4 +1,4 @@
-use std::{process::Command, path::Path};
+use std::path::Path;
 
 pub fn run_commands(command: String) -> String {
     //stdout().flush().unwrap();
@@ -26,11 +26,13 @@ pub fn run_commands(command: String) -> String {
         println!("{:?}", std::env::current_dir().unwrap());
         "".to_string()
     } else {
-        let output = Command::new(command).args(args).output();
-
-        return match output {
-            Ok(output) => String::from_utf8_lossy(&output.stdout).to_string(),
-            Err(e) => e.to_string(),
-        };
+        let output = std::process::Command::new(command)
+            .args(args)
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .output()
+            .expect("failed to execute process");
+        String::from_utf8(output.stdout).unwrap()
+        
     }
 }

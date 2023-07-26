@@ -9,6 +9,10 @@ edition = "2021"
 bevy = "0.11.0"
 hostname = "0.3.1"
 image = "0.24.6"
+libc = "0.2.147"
+mio = "0.8.8"
+nix = "0.26.2"
+pty = "0.2.2"
 
 [profile.dev]
 opt-level = 1
