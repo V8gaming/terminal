@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, os::unix::process::ExitStatusExt};
 
 pub fn run_commands(command: String) -> String {
     //stdout().flush().unwrap();
@@ -23,7 +23,7 @@ pub fn run_commands(command: String) -> String {
         }
 
         std::env::set_current_dir(args.next().unwrap()).unwrap();
-        println!("{:?}", std::env::current_dir().unwrap());
+        //println!("{:?}", std::env::current_dir().unwrap());
         "".to_string()
     } else {
         let output = std::process::Command::new(command)
@@ -31,7 +31,11 @@ pub fn run_commands(command: String) -> String {
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
             .output()
-            .expect("failed to execute process");
+            .unwrap_or(std::process::Output {
+                status: std::process::ExitStatus::from_raw(0),
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            });
         String::from_utf8(output.stdout).unwrap()
         
     }

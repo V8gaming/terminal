@@ -13,7 +13,7 @@ use bevy::window::Window;
 
 use crate::basic::run_commands;
 use crate::image::render_image;
-use crate::setup::FontResource;
+use crate::setup::{FontResource, EntityDatabase};
 
 #[derive(Resource, Default)]
 pub struct MyMaterialResource {
@@ -93,8 +93,9 @@ pub fn handle_return_key(
     font_resource: Res<FontResource>,
     mut query: Query<Entity>,
     materials: ResMut<Assets<Image>>,
-    image_idenifier: ResMut<ImageIdenifier>,
+    mut image_idenifier: ResMut<ImageIdenifier>,
     window: Query<&mut Window>,
+    database: ResMut<EntityDatabase>,
 ) {
     if kbd.just_pressed(KeyCode::Return) {
         let font = &font_resource.fira_sans;
@@ -109,11 +110,13 @@ pub fn handle_return_key(
                 for mut text in output.iter_mut() {
                     text.sections.clear()
                 }
-                for i in &image_idenifier.id {
+                let id = image_idenifier.id.clone();
+                for i in id.iter().rev() {
                     if i.is_some() {
                         let image = query.iter_mut().collect::<Vec<Entity>>()[i.unwrap() as usize];
                         //println!("{}",image.index());
                         commands.entity(image).despawn_recursive();
+                        image_idenifier.id.remove(image.index() as usize);
                     }
                 }
             
@@ -129,7 +132,7 @@ pub fn handle_return_key(
             }
         }
         render_image(command, user.clone(), path.clone(), window, materials, 
-            image_idenifier, commands, query);
+            image_idenifier, commands, query, database);
 
 
     

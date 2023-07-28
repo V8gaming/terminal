@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::{window::WindowResized, prelude::{
     Resource, Handle, Font, ResMut,
     NodeBundle, Commands, AssetServer, Res,
@@ -10,6 +12,11 @@ use crate::{update::{History, TerminalInput, TerminalOutput, ImageIdenifier}, te
 #[derive(Default, Resource)]
 pub struct FontResource {
     pub fira_sans: Handle<Font>,
+}
+
+#[derive(Default, Resource)]
+pub struct EntityDatabase {
+    pub hashmap: HashMap<String, u32>
 }
 
 #[derive(Default, Resource)]
@@ -27,7 +34,8 @@ pub fn setup(mut commands: Commands,
     mut resize_events: EventReader<WindowResized>,
     font_resource: Res<FontResource>,
     mut image_idenifier: ResMut<ImageIdenifier>,
-    terminal: Res<Terminal>
+    terminal: Res<Terminal>,
+    mut database: ResMut<EntityDatabase>,
 ) {
     let font = &font_resource.fira_sans;
     history.vec.push("".to_string());
@@ -49,7 +57,7 @@ pub fn setup(mut commands: Commands,
             },
             ..Default::default()
         }).id();
-        
+        database.hashmap.insert("main".to_string(), main_node.index());
             let output_node =
             commands.spawn(NodeBundle {
                 style: Style {
@@ -65,6 +73,7 @@ pub fn setup(mut commands: Commands,
                 ..Default::default()
 
             }).id();
+            database.hashmap.insert("output".to_string(), output_node.index());
             image_idenifier.output_id = Some(output_node.index());
             //println!("{}", output_node.index());
             commands.entity(output_node).with_children(|parent| {
@@ -81,7 +90,20 @@ pub fn setup(mut commands: Commands,
             });
             commands.entity(main_node).add_child(output_node);
             // input
-            commands.entity(main_node).with_children(|parent| 
+            let input_node = commands.spawn(NodeBundle {
+                style: Style {
+                    height: Val::Px(terminal.font_size()),
+                    width: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::FlexStart,
+                    align_items: AlignItems::FlexStart,
+                    ..Default::default()
+                },
+                ..Default::default()
+            }).id();
+            database.hashmap.insert("input".to_string(), input_node.index());
+            commands.entity(main_node).add_child(input_node);
+            commands.entity(input_node).with_children(|parent| 
                 {
                 parent.spawn(TextBundle::from_sections([
                     TextSection::from_style(TextStyle {

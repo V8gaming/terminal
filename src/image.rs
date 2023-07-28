@@ -7,6 +7,7 @@ use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::ui::{FocusPolicy, UiImage};
 use std::path::Path;
 
+use crate::setup::EntityDatabase;
 use crate::update::ImageIdenifier;
 
 pub fn render_image(
@@ -16,6 +17,7 @@ pub fn render_image(
     mut image_idenifier: ResMut<ImageIdenifier>,
     mut commands: Commands,
     mut query: Query<Entity>,
+    mut entity_database: ResMut<EntityDatabase>,
 ) {
     let img_extensions: [&str; 5] = [".png", ".jpg", ".jpeg", ".gif", "webp"];
     if img_extensions.iter().any(|&i| command.ends_with(i)) {
@@ -62,6 +64,7 @@ pub fn render_image(
         let texture_handle = materials.add(texture);
         let material = texture_handle.clone();
         let entity = query.iter_mut().collect::<Vec<Entity>>()[image_idenifier.output_id.unwrap()as usize];// entity 2 is the output 
+        
         let image_bundle = commands.spawn(ImageBundle {
             visibility: Visibility::Visible,
             focus_policy: FocusPolicy::Block,
@@ -71,9 +74,10 @@ pub fn render_image(
                 flip_y: false },
             ..Default::default()
         }).id();
+        entity_database.hashmap.insert(command.to_string(), image_bundle.index());
         //println!("{}",entities[2].index());
         //println!("{}",image_bundle.index());
         image_idenifier.id.push(Some(image_bundle.index()));
-        commands.entity(entity).add_child(image_bundle);
+        commands.entity(entity).push_children(&[image_bundle]);
     }
 }

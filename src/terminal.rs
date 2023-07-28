@@ -10,7 +10,7 @@ use crate::{
     }, 
     setup::{
         FontResource, 
-        load_font, setup
+        load_font, setup, EntityDatabase
     }
 };
 
@@ -39,6 +39,7 @@ impl Terminal {
             .add_systems(Update, handle_return_key)
             .add_systems(Update, update_window_and_input_system)
             .init_resource::<TextInputResource>()
+            .init_resource::<EntityDatabase>()
             .init_resource::<History>()
             .init_resource::<FontResource>()
             .init_resource::<ImageIdenifier>()
